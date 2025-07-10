@@ -221,7 +221,7 @@ export function ExpenseForm() {
             {/* Tipo */}
             <div className="space-y-2">
               <Label className="text-sm font-medium">Tipo *</Label>
-              <Select value={type} onValueChange={setType} required>
+              <Select value={type} onValueChange={(value: string) => setType(value as "income" | "expense")} required>
                 <SelectTrigger className="w-full h-11">
                   <SelectValue placeholder="Seleccione un tipo" />
                 </SelectTrigger>
