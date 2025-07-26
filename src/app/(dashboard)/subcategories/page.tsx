@@ -3,8 +3,6 @@ import React, { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Plus, Edit, Trash2 } from "lucide-react"
-import { Dialog, DialogContent } from "@/components/ui/dialog"
-import { DialogFormSubcategory } from "@/components/dialog-form-subcategory"
 
 // Tipos
 interface Subcategory {
@@ -218,22 +216,22 @@ export default function SubcategoriesTable() {
 					</tbody>
 				</table>
 			</div>
-			{/* Modal reutilizable */}
-			<Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-				<DialogContent>
-					<DialogFormSubcategory
-						open={dialogOpen}
-						onOpenChange={setDialogOpen}
-						initialData={
-							editingSubcategory
-								? { name: editingSubcategory.name, description: editingSubcategory.description, category: editingSubcategory.category }
-								: undefined
-						}
-						onSave={handleSave}
-						isEdit={!!editingSubcategory}
-					/>
-				</DialogContent>
-			</Dialog>
+			{/* Modal reutilizable (puedes crear un DialogFormSubcategory similar al de categorías) */}
+			{/* <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent>
+          <DialogFormSubcategory
+            open={dialogOpen}
+            onOpenChange={setDialogOpen}
+            initialData={
+              editingSubcategory
+                ? { name: editingSubcategory.name, description: editingSubcategory.description, category: editingSubcategory.category }
+                : undefined
+            }
+            onSave={handleSave}
+            isEdit={!!editingSubcategory}
+          />
+        </DialogContent>
+      </Dialog> */}
 		</div>
 	)
 }

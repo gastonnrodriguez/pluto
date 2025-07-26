@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState } from "react"
-import { CalendarIcon, DollarSign } from "lucide-react"
+import { CalendarIcon, DollarSign, TrendingDown, TrendingUp, Wallet } from "lucide-react"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 
@@ -112,32 +112,63 @@ export function ExpenseForm({
     ? subcategories[selectedCategory as keyof typeof subcategories] || []
     : []
 
-  const resume = [
-    { label: "Ingresos", value: totalIngresos, icon: <DollarSign className="h-5 w-5 text-green-600" /> },
-    { label: "Egresos", value: totalEgresos, icon: <DollarSign className="h-5 w-5 text-red-600" /> },
-    { label: "Saldo", value: saldo, icon: <DollarSign className="h-5 w-5 text-blue-600" /> },
-  ]
+ 
 
+  const monthNames = [
+    "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+  ];
+  const now = new Date();
+  const mesActual = `${monthNames[now.getMonth()]} ${now.getFullYear()}`;
+
+
+  // Asegura que los valores sean números
+  const ingresos = typeof totalIngresos === "number" && !isNaN(totalIngresos) ? totalIngresos : 0;
+  const egresos = typeof totalEgresos === "number" && !isNaN(totalEgresos) ? totalEgresos : 0;
+  const balance = typeof saldo === "number" && !isNaN(saldo) ? saldo : 0;
 
   return (
     <Card className="w-full max-w-xl mx-auto border-0 shadow-lg sm:border sm:shadow-sm">
-      {/* Indicadores arriba */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 px-4 pt-4">
-        {resume.map((item) => (
-          <Card key={item.label} className="bg-muted rounded-xl shadow p-3 flex items-center gap-2">
-            {item.icon}
-            <div>
-              <div className="text-sm text-muted-foreground">{item.label}</div>
-              <div className="text-lg font-semibold">
-                {typeof item.value === "number"
-  ? item.value.toLocaleString("es-UY", { style: "currency", currency: "UYU" })
-  : "-"}
-              </div>
-            </div>
-          </Card>
-        ))}
+      {/* Header Resumen Financiero */}
+      <div className="text-center mb-4 mt-6">
+        <h1 className="text-2xl font-bold text-gray-900">Resumen Financiero</h1>
+        <p className="text-sm text-gray-600">{mesActual}</p>
       </div>
-
+      {/* Indicadores arriba */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 px-4 pb-4">
+        {/* Ingresos */}
+        <Card className="bg-green-50 border border-green-200 shadow-none">
+          <CardContent className="p-4 flex flex-col items-center">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-green-700 font-semibold">Ingresos</span>
+              <TrendingUp className="h-4 w-4 text-green-600" />
+            </div>
+            <div className="text-2xl font-bold text-green-800">{ingresos.toLocaleString("es-UY", { style: "currency", currency: "UYU", maximumFractionDigits: 1, minimumFractionDigits: 0 })}</div>
+            <div className="text-xs text-green-600 mt-1">+12% vs mes anterior</div>
+          </CardContent>
+        </Card>
+        {/* Gastos */}
+        <Card className="bg-red-50 border border-red-200 shadow-none">
+          <CardContent className="p-4 flex flex-col items-center">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-red-700 font-semibold">Gastos</span>
+              <TrendingDown className="h-4 w-4 text-red-600" />
+            </div>
+            <div className="text-2xl font-bold text-red-800">{egresos.toLocaleString("es-UY", { style: "currency", currency: "UYU", maximumFractionDigits: 1, minimumFractionDigits: 0 })}</div>
+            <div className="text-xs text-red-600 mt-1">+8% vs mes anterior</div>
+          </CardContent>
+        </Card>
+        {/* Balance */}
+        <Card className="bg-blue-50 border border-blue-200 shadow-none">
+          <CardContent className="p-4 flex flex-col items-center">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-blue-700 font-semibold">Balance</span>
+              <Wallet className="h-4 w-4 text-blue-600" />
+            </div>
+            <div className="text-2xl font-bold text-blue-800">{balance.toLocaleString("es-UY", { style: "currency", currency: "UYU", maximumFractionDigits: 1, minimumFractionDigits: 0 })}</div>
+            <div className="text-xs text-blue-600 mt-1">{balance >= 0 ? "Saldo positivo" : "Saldo negativo"}</div>
+          </CardContent>
+        </Card>
+      </div>
       <CardHeader className="text-center pb-4">
         <CardTitle className="flex items-center justify-center gap-2 text-xl sm:text-2xl">
           <DollarSign className="h-5 w-5 sm:h-6 sm:w-6" />
