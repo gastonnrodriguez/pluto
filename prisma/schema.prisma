@@ -1,0 +1,90 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         Int             @id @default(autoincrement())
+  name       String
+  username   String          @unique
+  password   String
+  households UserHousehold[]
+}
+
+model Household {
+  id           Int             @id @default(autoincrement())
+  name         String
+  members      UserHousehold[]
+  categories   Category[]
+  creditCards  CreditCard[]
+  transactions Transaction[]
+}
+
+model UserHousehold {
+  id          Int       @id @default(autoincrement())
+  user        User      @relation(fields: [userId], references: [id])
+  userId      Int
+  household   Household @relation(fields: [householdId], references: [id])
+  householdId Int
+  role        String // Optional: 'admin', 'editor', etc.
+
+  @@unique([userId, householdId])
+}
+
+model Category {
+  id            Int           @id @default(autoincrement())
+  name          String
+  description   String
+  householdId   Int? // nullable = global category if null
+  household     Household?    @relation(fields: [householdId], references: [id])
+  subcategories Subcategory[]
+  transactions  Transaction[]
+}
+
+model Subcategory {
+  id           Int           @id @default(autoincrement())
+  name         String
+  description  String
+  categoryId   Int
+  category     Category      @relation(fields: [categoryId], references: [id])
+  transactions Transaction[]
+}
+
+model CreditCard {
+  id          Int       @id @default(autoincrement())
+  issuer      String
+  description String
+  household   Household @relation(fields: [householdId], references: [id])
+  householdId Int
+}
+
+model Currency {
+  code         String        @id
+  description  String
+  transactions Transaction[]
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+}
+
+model Transaction {
+  id            Int             @id @default(autoincrement())
+  type          TransactionType
+  amount        Float
+  description   String?
+  date          DateTime
+  household     Household       @relation(fields: [householdId], references: [id])
+  householdId   Int
+  currency      Currency        @relation(fields: [currencyCode], references: [code])
+  currencyCode  String
+  category      Category        @relation(fields: [categoryId], references: [id])
+  categoryId    Int
+  subcategory   Subcategory?    @relation(fields: [subcategoryId], references: [id])
+  subcategoryId Int?
+}
