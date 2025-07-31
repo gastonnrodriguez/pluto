@@ -11,11 +11,16 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Skeleton } from "@/components/ui/skeleton"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
+
+import { useCategories } from "@/hooks/use-categories"
+import { useSubcategories } from "@/hooks/use-subCategories"
+
 
 
 
@@ -35,32 +40,6 @@ const currencies = [
   { id: "1", name: "UYU" },
   { id: "2", name: "USD" },
 ]
-
-const categories = [
-  { id: "1", name: "Alimentación" },
-  { id: "2", name: "Transporte" },
-  { id: "3", name: "Entretenimiento" },
-  { id: "4", name: "Salud" },
-  { id: "5", name: "Servicios" },
-]
-
-const subcategories = {
-  "1": [
-    { id: "1-1", name: "Supermercado" },
-    { id: "1-2", name: "Restaurantes" },
-    { id: "1-3", name: "Delivery" },
-  ],
-  "2": [
-    { id: "2-1", name: "Combustible" },
-    { id: "2-2", name: "Transporte público" },
-    { id: "2-3", name: "Uber/Taxi" },
-  ],
-  "3": [
-    { id: "3-1", name: "Cine" },
-    { id: "3-2", name: "Streaming" },
-    { id: "3-3", name: "Juegos" },
-  ],
-}
 
 const cards = [
   { id: "1", name: "Visa **** 1234", type: "Crédito" },
@@ -82,6 +61,8 @@ export function ExpenseForm({
   const [amount, setAmount] = useState("")
   const [description, setDescription] = useState("")
   const [date, setDate] = useState<Date>(new Date())
+  const { categories, loading: loadingCategories } = useCategories()
+  const { subcategories, loading: loadingSubcategories } = useSubcategories(selectedCategory)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -107,12 +88,6 @@ export function ExpenseForm({
     setSelectedCard("")
     setDate(new Date())
   }
-
-  const availableSubcategories = selectedCategory
-    ? subcategories[selectedCategory as keyof typeof subcategories] || []
-    : []
-
- 
 
   const monthNames = [
     "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
@@ -248,40 +223,54 @@ export function ExpenseForm({
               className="resize-none text-base w-full"
             />
           </div>
-          {/* Categoría */}
+         {/* Categoría */}
           <div className="space-y-2">
             <Label className="text-sm font-medium">Categoría *</Label>
-            <Select value={selectedCategory} onValueChange={setSelectedCategory} required>
-              <SelectTrigger className="h-11 w-full">
-                <SelectValue placeholder="Selecciona una categoría" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map((category) => (
-                  <SelectItem key={category.id} value={category.id}>
-                    {category.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {loadingCategories ? (
+              <div className="space-y-1">
+                <Skeleton className="h-11 w-full rounded-md" />
+              </div>
+            ) : (
+              <Select value={selectedCategory} onValueChange={setSelectedCategory} required>
+                <SelectTrigger className="h-11 w-full">
+                  <SelectValue placeholder="Selecciona una categoría" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((category) => (
+                    <SelectItem key={category.id} value={String(category.id)}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
+
           {/* Subcategoría */}
           {selectedCategory && (
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Subcategoría</Label>
+          <div className="space-y-2 min-h-[84px]"> {/* reserva altura */}
+            <Label className="text-sm font-medium">Subcategoría</Label>
+
+            {loadingSubcategories ? (
+              <div className="h-11 rounded-md bg-muted animate-pulse" />
+            ) : (
               <Select value={selectedSubcategory} onValueChange={setSelectedSubcategory}>
                 <SelectTrigger className="h-11 w-full">
                   <SelectValue placeholder="Selecciona una subcategoría" />
                 </SelectTrigger>
                 <SelectContent>
-                  {availableSubcategories.map((subcategory) => (
-                    <SelectItem key={subcategory.id} value={subcategory.id}>
+                  {subcategories.map((subcategory) => (
+                    <SelectItem key={subcategory.id} value={String(subcategory.id)}>
                       {subcategory.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-          )}
+            )}
+          </div>
+        )}
+
+
           {/* Tarjeta/Método de pago */}
           <div className="space-y-2">
             <Label className="text-sm font-medium">Método de pago *</Label>

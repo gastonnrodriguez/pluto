@@ -36,7 +36,7 @@ export default function DashboardLayout({
 
           {/* AQUÍ SE RENDERIZA EL CONTENIDO QUE CAMBIA */}
           <main className="flex-1 overflow-auto">
-            <div className="container mx-auto p-4 sm:p-6 lg:p-8 max-w-7xl">
+            <div className="container mx-auto p-2 sm:p-4 lg:p-6 max-w-7xl">
               {children} {/* ← Este children cambia según la ruta */}
             </div>
           </main>
