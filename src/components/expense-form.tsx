@@ -34,6 +34,7 @@ const CURRENCIES = [
 ]
 
 type AiResult = {
+  tipo: "INCOME" | "EXPENSE"
   categoria: string
   subcategoria: string | null
   importe: number | null
@@ -106,6 +107,9 @@ export function ExpenseForm() {
   }
 
   const applyAiResult = (ai: AiResult) => {
+    // Tipo inferido por la IA (default EXPENSE)
+    setSelectedType(ai.tipo ?? "EXPENSE")
+
     // Match category by name (case-insensitive)
     const matchedCat = categories.find(
       (c) => c.name.toLowerCase() === ai.categoria?.toLowerCase()
@@ -448,9 +452,10 @@ export function ExpenseForm() {
         </DialogHeader>
 
         {aiPreview && (
-          <div className="space-y-3 py-1">
-            <Row label="Descripción"  value={aiPreview.descripcion ?? "—"} />
+          <div className="space-y-1 py-1">
+            <Row label="Tipo"         value={aiPreview.tipo === "INCOME" ? "Ingreso" : "Gasto"} tipo={aiPreview.tipo} />
             <Row label="Importe"      value={aiPreview.importe !== null && aiPreview.importe !== undefined ? String(aiPreview.importe) : "—"} highlight />
+            <Row label="Descripción"  value={aiPreview.descripcion ?? "—"} />
             <Row label="Categoría"    value={aiPreview.categoria ?? "—"} />
             <Row label="Subcategoría" value={aiPreview.subcategoria ?? "—"} />
           </div>
@@ -477,11 +482,16 @@ export function ExpenseForm() {
   )
 }
 
-function Row({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
+function Row({ label, value, highlight, tipo }: { label: string; value: string; highlight?: boolean; tipo?: "INCOME" | "EXPENSE" }) {
   return (
     <div className="flex justify-between items-center py-2 border-b border-border/50 last:border-0">
       <span className="text-sm text-muted-foreground">{label}</span>
-      <span className={cn("text-sm font-medium text-right max-w-[60%]", highlight && "text-primary text-base font-semibold")}>
+      <span className={cn(
+        "text-sm font-medium text-right max-w-[60%]",
+        highlight && "text-primary text-base font-semibold",
+        tipo === "INCOME" && "text-emerald-500 font-semibold",
+        tipo === "EXPENSE" && "text-red-500 font-semibold",
+      )}>
         {value}
       </span>
     </div>

@@ -38,6 +38,7 @@ ${CATEGORIES.map(c => `- ${c.name}: ${c.subcategories.join(", ")}`).join("\n")}
 
 Retorná exactamente este JSON:
 {
+  "tipo": "<INCOME o EXPENSE>",
   "categoria": "<nombre exacto de la categoría>",
   "subcategoria": "<nombre exacto de la subcategoría, o null si no aplica>",
   "importe": <número con el total a pagar, sin símbolo de moneda>,
@@ -45,6 +46,7 @@ Retorná exactamente este JSON:
 }
 
 Reglas:
+- "tipo" debe ser EXPENSE para cualquier compra, factura o servicio a pagar. Solo usá INCOME si la imagen muestra claramente un cobro, sueldo o ingreso de dinero recibido. Ante la duda, usá EXPENSE.
 - El importe debe ser el TOTAL de la factura (no ítems individuales)
 - Si es un supermercado, usá la categoría Alimentos y la subcategoría que corresponda al nombre del comercio
 - Si no reconocés el comercio exacto, elegí la subcategoría más apropiada
