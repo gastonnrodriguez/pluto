@@ -8,6 +8,7 @@ import { es } from "date-fns/locale"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -54,6 +55,7 @@ export function ExpenseForm() {
   // Gemini AI
   const [scanningReceipt, setScanningReceipt]         = useState(false)
   const [scanError, setScanError]                     = useState("")
+  const [aiPreview, setAiPreview]                     = useState<AiResult | null>(null)
   const fileInputRef                                  = useRef<HTMLInputElement>(null)
 
   const { categories, loading: loadingCategories }   = useCategories()
@@ -91,7 +93,7 @@ export function ExpenseForm() {
       }
 
       const ai: AiResult = await res.json()
-      applyAiResult(ai)
+      setAiPreview(ai)
     } catch (err) {
       setScanError(err instanceof Error ? err.message : "Error al escanear la factura")
     } finally {
@@ -188,10 +190,17 @@ export function ExpenseForm() {
     setSelectedCreditCard("")
     setDate(new Date())
     setScanError("")
+    setAiPreview(null)
     setPendingSubcategory(null)
   }
 
+  const confirmAiPreview = () => {
+    if (aiPreview) applyAiResult(aiPreview)
+    setAiPreview(null)
+  }
+
   return (
+    <>
     <Card className="w-full max-w-xl mx-auto border-0 shadow-lg sm:border sm:shadow-sm">
       <CardHeader className="text-center pb-4">
         <CardTitle className="flex items-center justify-center gap-2 text-xl sm:text-2xl">
@@ -414,5 +423,54 @@ export function ExpenseForm() {
         </form>
       </CardContent>
     </Card>
+
+    {/* AI Preview Dialog */}
+    <Dialog open={!!aiPreview} onOpenChange={(open) => { if (!open) setAiPreview(null) }}>
+      <DialogContent className="max-w-sm mx-4">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-base">
+            <Camera className="h-4 w-4 text-primary" />
+            Resultado del escaneo
+          </DialogTitle>
+        </DialogHeader>
+
+        {aiPreview && (
+          <div className="space-y-3 py-1">
+            <Row label="Descripción"  value={aiPreview.descripcion ?? "—"} />
+            <Row label="Importe"      value={aiPreview.importe !== null && aiPreview.importe !== undefined ? String(aiPreview.importe) : "—"} highlight />
+            <Row label="Categoría"    value={aiPreview.categoria ?? "—"} />
+            <Row label="Subcategoría" value={aiPreview.subcategoria ?? "—"} />
+          </div>
+        )}
+
+        <DialogFooter className="flex-row gap-2 pt-2">
+          <Button
+            variant="outline"
+            className="flex-1"
+            onClick={() => setAiPreview(null)}
+          >
+            Descartar
+          </Button>
+          <Button
+            className="flex-1"
+            onClick={confirmAiPreview}
+          >
+            Aplicar
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
+  )
+}
+
+function Row({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
+  return (
+    <div className="flex justify-between items-center py-2 border-b border-border/50 last:border-0">
+      <span className="text-sm text-muted-foreground">{label}</span>
+      <span className={cn("text-sm font-medium text-right max-w-[60%]", highlight && "text-primary text-base font-semibold")}>
+        {value}
+      </span>
+    </div>
   )
 }
