@@ -29,7 +29,7 @@ export async function POST(req: Request) {
   }
 
   const genai = new GoogleGenerativeAI(apiKey)
-  const model = genai.getGenerativeModel({ model: "gemini-1.5-flash" })
+  const model = genai.getGenerativeModel({ model: "gemini-2.5-flash-preview-04-17" })
 
   const prompt = `Analizá esta imagen de factura o ticket de compra y respondé SOLO con un JSON válido (sin markdown, sin explicaciones).
 
