@@ -153,6 +153,12 @@ export function ExpenseForm() {
     e.preventDefault()
     setSubmitError("")
     setSubmitOk(false)
+
+    // Validación explícita (shadcn Select ignora el required nativo del browser)
+    if (!selectedType)     return setSubmitError("Seleccioná un tipo (Ingreso / Egreso)")
+    if (!selectedCategory) return setSubmitError("Seleccioná una categoría")
+    if (!amount || isNaN(parseFloat(amount))) return setSubmitError("Ingresá un monto válido")
+
     setSubmitting(true)
 
     try {
