@@ -31,24 +31,12 @@ export async function POST(req: Request) {
   const genai = new GoogleGenerativeAI(apiKey)
   const model = genai.getGenerativeModel({ model: "gemini-3-flash-preview" })
 
-  const prompt = `Analizá esta imagen de factura o ticket de compra y respondé SOLO con un JSON válido (sin markdown, sin explicaciones).
+  const cats = CATEGORIES.map(c => `${c.name}:${c.subcategories.join(",")}`).join("|")
 
-Categorías disponibles y sus subcategorías:
-${CATEGORIES.map(c => `- ${c.name}: ${c.subcategories.join(", ")}`).join("\n")}
-
-Retorná exactamente este JSON:
-{
-  "categoria": "<nombre exacto de la categoría>",
-  "subcategoria": "<nombre exacto de la subcategoría, o null si no aplica>",
-  "importe": <número con el total a pagar, sin símbolo de moneda>,
-  "descripcion": "<descripción breve del gasto en español, máximo 60 caracteres>"
-}
-
-Reglas:
-- El importe debe ser el TOTAL de la factura (no ítems individuales)
-- Si es un supermercado, usá la categoría Alimentos y la subcategoría que corresponda al nombre del comercio
-- Si no reconocés el comercio exacto, elegí la subcategoría más apropiada
-- Si no podés determinar el importe, retorná null en ese campo`
+  const prompt = `Factura/ticket. JSON válido solamente, sin markdown.
+Categorías (nombre:subcats separadas por coma): ${cats}
+{"categoria":"<exacto>","subcategoria":"<exacto o null>","importe":<total numérico o null>,"descripcion":"<60 chars es>"}
+Importe=total de la factura. Subcategoría=nombre del comercio si aplica, sino la más cercana.`
 
   const result = await model.generateContent([
     prompt,
