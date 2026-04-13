@@ -1,0 +1,112 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         Int             @id @default(autoincrement())
+  name       String
+  username   String          @unique
+  password   String
+  households UserHousehold[]
+  cards      Card[]          // 👈 Tarjetas del usuario
+}
+
+model Household {
+  id           Int             @id @default(autoincrement())
+  name         String
+  members      UserHousehold[]
+  categories   Category[]
+  transactions Transaction[]
+  cards        Card[]          // 👈 Tarjetas asignadas al household
+}
+
+model UserHousehold {
+  id          Int       @id @default(autoincrement())
+  user        User      @relation(fields: [userId], references: [id])
+  userId      Int
+  household   Household @relation(fields: [householdId], references: [id])
+  householdId Int
+  role        String // Optional: 'admin', 'editor', etc.
+
+  @@unique([userId, householdId])
+}
+
+model Category {
+  id            Int           @id @default(autoincrement())
+  name          String
+  description   String
+  householdId   Int? // nullable = global category if null
+  household     Household?    @relation(fields: [householdId], references: [id])
+  subcategories Subcategory[]
+  transactions  Transaction[]
+}
+
+model Subcategory {
+  id           Int           @id @default(autoincrement())
+  name         String
+  description  String
+  categoryId   Int
+  category     Category      @relation(fields: [categoryId], references: [id])
+  transactions Transaction[]
+}
+
+model Card {
+  id          Int       @id @default(autoincrement())
+  name        String
+  type        String    // "crédito", "débito", "prepago"
+  bank        String
+  number      String?   // los últimos 4, por ejemplo
+  limit       Float?    // solo aplica si es crédito
+  balance     Float     @default(0)
+  isActive    Boolean   @default(true)
+
+  closeDay    Int?      // solo para crédito
+  dueDay      Int?      // solo para crédito
+
+  householdId Int       // 👈 A qué hogar pertenece
+  household   Household @relation(fields: [householdId], references: [id])
+
+  userId      Int       // 👈 A qué usuario pertenece
+  user        User      @relation(fields: [userId], references: [id])
+
+  transactions Transaction[]
+}
+
+model Currency {
+  code         String        @id
+  description  String
+  transactions Transaction[]
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+}
+
+model Transaction {
+  id             Int       @id @default(autoincrement())
+  type           String    // ingreso | egreso
+  amount         Float
+  description    String
+  categoryId     Int
+  subcategoryId  Int?
+  currencyCode   String    // 👈 esta es la clave de la moneda
+  paymentMethod  String?   // "Efectivo", "Ticket", etc.
+  cardId         Int?      // si fue con tarjeta, ya sea crédito o débito
+
+  createdAt      DateTime  @default(now())
+
+  // Relaciones
+  category       Category  @relation(fields: [categoryId], references: [id])
+  subcategory    Subcategory? @relation(fields: [subcategoryId], references: [id])
+  currency       Currency  @relation(fields: [currencyCode], references: [code])
+  card           Card?     @relation(fields: [cardId], references: [id])
+  householdId    Int
+  household      Household @relation(fields: [householdId], references: [id])
+}
+  

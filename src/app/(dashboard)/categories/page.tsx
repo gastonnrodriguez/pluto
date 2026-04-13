@@ -1,5 +1,5 @@
 "use client"
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Plus, Edit, Trash2 } from "lucide-react"
@@ -42,27 +42,48 @@ export default function CategoriesTable() {
     setDialogOpen(true)
   }
 
-  const handleSave = (data: { name: string; description: string }) => {
-    if (editingCategory) {
-      // Edita existente
-      setCategories(cats =>
-        cats.map(c =>
-          c.id === editingCategory.id ? { ...c, ...data } : c
-        )
-      )
-    } else {
-      // Crea nueva
-      setCategories([
-        ...categories,
-        { id: Date.now().toString(), ...data,}
-      ])
-    }
-    setEditingCategory(null)
+  const handleSave = async (data: { name: string; description: string }) => {
+  if (editingCategory) {
+    // Update
+    await fetch(`/api/categories/${editingCategory.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    })
+  } else {
+    // Create
+    await fetch("/api/categories", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    })
   }
 
-  const handleDelete = (id: string) => {
-    if (window.confirm("¿Eliminar categoría?")) setCategories(cats => cats.filter(c => c.id !== id))
+  // Refrescar lista
+  const res = await fetch("/api/categories")
+  const updated = await res.json()
+  setCategories(updated)
+  setEditingCategory(null)
+}
+
+
+  const handleDelete = async (id: string) => {
+  if (window.confirm("¿Eliminar categoría?")) {
+    await fetch(`/api/categories/${id}`, { method: "DELETE" })
+    const res = await fetch("/api/categories")
+    const updated = await res.json()
+    setCategories(updated)
   }
+}
+
+
+    // useEffect para cargar categorías reales
+  useEffect(() => {
+    fetch("/api/categories")
+      .then(res => res.json())
+      .then(data => setCategories(data))
+  }, [])
+
 
   return (
     <div className="space-y-6">
