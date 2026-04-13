@@ -1,168 +1,111 @@
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Switch } from "@/components/ui/switch"
-import { Separator } from "@/components/ui/separator"
-import { User, Bell, Palette, Database, Shield, HelpCircle } from "lucide-react"
+"use client"
+
+import Link from "next/link"
+import { ChevronRight, Tags, CreditCard, Moon, Sun, Monitor } from "lucide-react"
+import { useTheme } from "next-themes"
+import { useEffect, useState } from "react"
+import { cn } from "@/lib/utils"
+
+function SettingRow({
+  href,
+  icon: Icon,
+  label,
+  description,
+  iconClass,
+}: {
+  href: string
+  icon: React.ElementType
+  label: string
+  description?: string
+  iconClass?: string
+}) {
+  return (
+    <Link
+      href={href}
+      className="flex items-center gap-3 px-4 py-3.5 hover:bg-muted/50 transition-colors active:bg-muted"
+    >
+      <div className={cn("flex h-8 w-8 shrink-0 items-center justify-center rounded-lg", iconClass ?? "bg-primary/10 text-primary")}>
+        <Icon className="h-4 w-4" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium">{label}</p>
+        {description && <p className="text-xs text-muted-foreground truncate">{description}</p>}
+      </div>
+      <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+    </Link>
+  )
+}
+
+const THEMES = [
+  { value: "light",  label: "Claro",   icon: Sun },
+  { value: "dark",   label: "Oscuro",  icon: Moon },
+  { value: "system", label: "Sistema", icon: Monitor },
+] as const
 
 export default function SettingsPage() {
+  const { theme, setTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
+    <div className="space-y-5">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Configuración</h1>
-        <p className="text-muted-foreground">Personaliza tu experiencia en ExpenseTracker</p>
+        <h1 className="text-xl font-bold">Configuración</h1>
       </div>
 
-      <div className="grid gap-6">
-        {/* Perfil de usuario */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <User className="h-5 w-5" />
-              Perfil de Usuario
-            </CardTitle>
-            <CardDescription>Información básica de tu cuenta</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="name">Nombre completo</Label>
-                <Input id="name" placeholder="Tu nombre" defaultValue="Usuario Demo" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Correo electrónico</Label>
-                <Input id="email" type="email" placeholder="tu@email.com" defaultValue="demo@example.com" />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="currency">Moneda predeterminada</Label>
-              <Select defaultValue="usd">
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecciona tu moneda" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="usd">USD - Dólar estadounidense</SelectItem>
-                  <SelectItem value="eur">EUR - Euro</SelectItem>
-                  <SelectItem value="cop">COP - Peso colombiano</SelectItem>
-                  <SelectItem value="mxn">MXN - Peso mexicano</SelectItem>
-                  <SelectItem value="ars">ARS - Peso argentino</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <Button>Guardar cambios</Button>
-          </CardContent>
-        </Card>
+      {/* Datos */}
+      <section>
+        <p className="px-1 pb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          Datos
+        </p>
+        <div className="rounded-xl border bg-card divide-y divide-border overflow-hidden">
+          <SettingRow
+            href="/cards"
+            icon={CreditCard}
+            label="Tarjetas"
+            description="Administrá tus tarjetas de crédito y débito"
+            iconClass="bg-blue-500/10 text-blue-500"
+          />
+          <SettingRow
+            href="/categories"
+            icon={Tags}
+            label="Categorías"
+            description="Categorizá y organizá tus gastos"
+            iconClass="bg-violet-500/10 text-violet-500"
+          />
+        </div>
+      </section>
 
-        {/* Notificaciones */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Bell className="h-5 w-5" />
-              Notificaciones
-            </CardTitle>
-            <CardDescription>Configura cómo quieres recibir notificaciones</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Recordatorios de gastos</Label>
-                <p className="text-sm text-muted-foreground">Recibe recordatorios para registrar gastos</p>
-              </div>
-              <Switch defaultChecked />
+      {/* Apariencia */}
+      <section>
+        <p className="px-1 pb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          Apariencia
+        </p>
+        <div className="rounded-xl border bg-card p-4">
+          <p className="text-sm font-medium mb-3">Tema</p>
+          {mounted && (
+            <div className="grid grid-cols-3 gap-2">
+              {THEMES.map(({ value, label, icon: Icon }) => (
+                <button
+                  key={value}
+                  onClick={() => setTheme(value)}
+                  className={cn(
+                    "flex flex-col items-center gap-1.5 rounded-lg py-3 px-2 text-xs font-medium transition-colors border",
+                    theme === value
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border text-muted-foreground hover:bg-muted"
+                  )}
+                >
+                  <Icon className="h-4 w-4" />
+                  {label}
+                </button>
+              ))}
             </div>
-            <Separator />
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Alertas de presupuesto</Label>
-                <p className="text-sm text-muted-foreground">Notificaciones cuando superes tu presupuesto</p>
-              </div>
-              <Switch defaultChecked />
-            </div>
-            <Separator />
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Reportes mensuales</Label>
-                <p className="text-sm text-muted-foreground">Resumen mensual de tus gastos</p>
-              </div>
-              <Switch />
-            </div>
-          </CardContent>
-        </Card>
+          )}
+        </div>
+      </section>
 
-        {/* Apariencia */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Palette className="h-5 w-5" />
-              Apariencia
-            </CardTitle>
-            <CardDescription>Personaliza la apariencia de la aplicación</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label>Tema</Label>
-              <Select defaultValue="system">
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecciona un tema" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="light">Claro</SelectItem>
-                  <SelectItem value="dark">Oscuro</SelectItem>
-                  <SelectItem value="system">Sistema</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Idioma</Label>
-              <Select defaultValue="es">
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecciona un idioma" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="es">Español</SelectItem>
-                  <SelectItem value="en">English</SelectItem>
-                  <SelectItem value="pt">Português</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Datos y privacidad */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Shield className="h-5 w-5" />
-              Datos y Privacidad
-            </CardTitle>
-            <CardDescription>Controla tus datos y configuración de privacidad</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-2 md:grid-cols-2">
-              <Button variant="outline">
-                <Database className="mr-2 h-4 w-4" />
-                Exportar datos
-              </Button>
-              <Button variant="outline">
-                <HelpCircle className="mr-2 h-4 w-4" />
-                Solicitar soporte
-              </Button>
-            </div>
-            <Separator />
-            <div className="space-y-2">
-              <Button variant="destructive" className="w-full">
-                Eliminar cuenta
-              </Button>
-              <p className="text-xs text-muted-foreground text-center">
-                Esta acción no se puede deshacer. Se eliminarán todos tus datos permanentemente.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <p className="text-center text-xs text-muted-foreground pt-2">Pluto v0.1</p>
     </div>
   )
 }
