@@ -1,21 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai"
 import { NextResponse } from "next/server"
-
-const CATEGORIES = [
-  { name: "Ingresos",   subcategories: ["Sueldo Ani","Sueldo Gaston","Tickets Alimentacion","Aguinaldo Ani","Aguinaldo Gaston","Salario Vacacional Gaston","Bono Ani","Quebranto Ani"] },
-  { name: "Alimentos",  subcategories: ["Dioma","Rodi","Tienda Inglesa","Disco","Devoto","Puesto Verduras","Panaderia","Carniceria","Feria","Ta-Ta","MultiAhorro","MacroMercado","El Dorado"] },
-  { name: "Auto",       subcategories: ["Nafta","Seguro","Patente","Garage","Service","Lavado","Prestamo"] },
-  { name: "Transporte", subcategories: ["Taxi","Uber","Bus"] },
-  { name: "BHU",        subcategories: ["Hipoteca"] },
-  { name: "Salud",      subcategories: ["Terapia Psicologica","Terapia Fonoaudiologica","Terapia Psicomotriz","Emergencia movil Mauro","Emergencia movil Clarita","Casmu"] },
-  { name: "Educacion",  subcategories: ["CENI","Escuela 11","Utiles","Uniformes","Otros"] },
-  { name: "Servicios",  subcategories: ["UTE","OSE","ANTEL ADSL","ANTEL Movil Ani","ANTEL Movil Gaston","Caja Profesional","Fondo Solidaridad"] },
-  { name: "Tributos",   subcategories: ["IM Saneamiento","IM Domiciliario","Impuesto Primaria"] },
-  { name: "Tarjetas",   subcategories: ["Visa Santander","Visa Itau","Master BROU"] },
-  { name: "Otros",      subcategories: ["Ferreteria","Ropa","Regalos"] },
-  { name: "Ocio",       subcategories: ["Restaurantes","Cine","Helados","Pasear","Poker","Salidas"] },
-  { name: "Ahorro",     subcategories: ["Dolares"] },
-]
+import { prisma } from "@/lib/prisma"
 
 export async function POST(req: Request) {
   const apiKey = process.env.GEMINI_API_KEY
@@ -28,10 +13,15 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "imageBase64 y mimeType son requeridos" }, { status: 400 })
   }
 
+  const dbCategories = await prisma.category.findMany({
+    include: { subcategories: { select: { name: true } } },
+    orderBy: { name: "asc" },
+  })
+
   const genai = new GoogleGenerativeAI(apiKey)
   const model = genai.getGenerativeModel({ model: "gemini-3-flash-preview" })
 
-  const cats = CATEGORIES.map(c => `${c.name}:${c.subcategories.join(",")}`).join("|")
+  const cats = dbCategories.map(c => `${c.name}:${c.subcategories.map(s => s.name).join(",")}`).join("|")
 
   const prompt = `Factura/ticket. JSON válido solamente, sin markdown.
 Categorías (nombre:subcats separadas por coma): ${cats}
