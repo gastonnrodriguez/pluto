@@ -6,40 +6,103 @@ export async function seedSubcategories() {
   })
 
   const byName = (name: string) =>
-    categories.find(c => c.name === name)?.id
+    categories.find((c) => c.name === name)?.id
 
   const subcategories = [
-    // Alimentación
-    { name: "Supermercado", description: "Compras mensuales de alimentos", categoryId: byName("Alimentación") },
-    { name: "Verdulería", description: "Frutas, verduras y alimentos frescos", categoryId: byName("Alimentación") },   
-    { name: "Delivery", description: "Pedidos a domicilio", categoryId: byName("Alimentación") },
+    // Ingresos
+    { name: "Sueldo Ani",               categoryId: byName("Ingresos") },
+    { name: "Sueldo Gaston",            categoryId: byName("Ingresos") },
+    { name: "Tickets Alimentacion",     categoryId: byName("Ingresos") },
+    { name: "Aguinaldo Ani",            categoryId: byName("Ingresos") },
+    { name: "Aguinaldo Gaston",         categoryId: byName("Ingresos") },
+    { name: "Salario Vacacional Gaston",categoryId: byName("Ingresos") },
+    { name: "Bono Ani",                 categoryId: byName("Ingresos") },
+    { name: "Quebranto Ani",            categoryId: byName("Ingresos") },
+
+    // Alimentos
+    { name: "Dioma",          categoryId: byName("Alimentos") },
+    { name: "Rodi",           categoryId: byName("Alimentos") },
+    { name: "Tienda Inglesa", categoryId: byName("Alimentos") },
+    { name: "Disco",          categoryId: byName("Alimentos") },
+    { name: "Devoto",         categoryId: byName("Alimentos") },
+    { name: "Puesto Verduras",categoryId: byName("Alimentos") },
+    { name: "Panaderia",      categoryId: byName("Alimentos") },
+    { name: "Carniceria",     categoryId: byName("Alimentos") },
+    { name: "Feria",          categoryId: byName("Alimentos") },
+    { name: "Ta-Ta",          categoryId: byName("Alimentos") },
+    { name: "MultiAhorro",    categoryId: byName("Alimentos") },
+    { name: "MacroMercado",   categoryId: byName("Alimentos") },
+    { name: "El Dorado",      categoryId: byName("Alimentos") },
+
+    // Auto
+    { name: "Nafta",    categoryId: byName("Auto") },
+    { name: "Seguro",   categoryId: byName("Auto") },
+    { name: "Patente",  categoryId: byName("Auto") },
+    { name: "Garage",   categoryId: byName("Auto") },
+    { name: "Service",  categoryId: byName("Auto") },
+    { name: "Lavado",   categoryId: byName("Auto") },
+    { name: "Prestamo", categoryId: byName("Auto") },
 
     // Transporte
-    { name: "Combustible", description: "Gasto en gasolina o diésel", categoryId: byName("Transporte") },
-    { name: "Transporte público", description: "Ómnibus, metro, taxi", categoryId: byName("Transporte") },
-    { name: "Mantenimiento vehículo", description: "Servicio, repuestos, mecánica", categoryId: byName("Transporte") },
-    { name: "Estacionamiento", description: "Parking y garages", categoryId: byName("Transporte") },
+    { name: "Taxi", categoryId: byName("Transporte") },
+    { name: "Uber", categoryId: byName("Transporte") },
+    { name: "Bus",  categoryId: byName("Transporte") },
 
-    // Entretenimiento
-    { name: "Cine", description: "Entradas al cine", categoryId: byName("Entretenimiento") },
-    { name: "Streaming", description: "Netflix, Spotify, etc.", categoryId: byName("Entretenimiento") },
-    { name: "Eventos", description: "Conciertos, ferias, festivales", categoryId: byName("Entretenimiento") },
-    { name: "Salidas con amigos", description: "Bares, boliches, cafés", categoryId: byName("Entretenimiento") },
-     { name: "Restaurantes", description: "Cenas fuera de casa", categoryId: byName("Entretenimiento") },
+    // BHU
+    { name: "Hipoteca", categoryId: byName("BHU") },
 
     // Salud
-    { name: "Farmacia", description: "Medicamentos y productos", categoryId: byName("Salud") },
-    { name: "Consultas médicas", description: "Clínicas, mutualistas, especialistas", categoryId: byName("Salud") },
-    { name: "Análisis y estudios", description: "Laboratorio, radiografías, etc.", categoryId: byName("Salud") },
-    { name: "Emergencia movil", description: "Gasto mensual de cobertura médica", categoryId: byName("Salud") },
+    { name: "Terapia Psicologica",    categoryId: byName("Salud") },
+    { name: "Terapia Fonoaudiologica",categoryId: byName("Salud") },
+    { name: "Terapia Psicomotriz",    categoryId: byName("Salud") },
+    { name: "Emergencia movil Mauro", categoryId: byName("Salud") },
+    { name: "Emergencia movil Clarita",categoryId: byName("Salud") },
+    { name: "Casmu",                  categoryId: byName("Salud") },
+
+    // Educacion
+    { name: "CENI",       categoryId: byName("Educacion") },
+    { name: "Escuela 11", categoryId: byName("Educacion") },
+    { name: "Utiles",     categoryId: byName("Educacion") },
+    { name: "Uniformes",  categoryId: byName("Educacion") },
+    { name: "Otros",      categoryId: byName("Educacion") },
 
     // Servicios
-    { name: "Energía eléctrica", description: "Factura de UTE / luz", categoryId: byName("Servicios") },
-    { name: "Agua", description: "Factura de OSE / saneamiento", categoryId: byName("Servicios") },
-    { name: "Internet y cable", description: "Gastos mensuales de conexión y TV", categoryId: byName("Servicios") },
-    { name: "Teléfono móvil", description: "Plan de celular y recargas", categoryId: byName("Servicios") },
-     { name: "Hipoteca", description: "Plan de celular y recargas", categoryId: byName("Servicios") },
-  ].filter(s => s.categoryId !== undefined)
+    { name: "UTE",               categoryId: byName("Servicios") },
+    { name: "OSE",               categoryId: byName("Servicios") },
+    { name: "ANTEL ADSL",        categoryId: byName("Servicios") },
+    { name: "ANTEL Movil Ani",   categoryId: byName("Servicios") },
+    { name: "ANTEL Movil Gaston",categoryId: byName("Servicios") },
+    { name: "Caja Profesional",  categoryId: byName("Servicios") },
+    { name: "Fondo Solidaridad", categoryId: byName("Servicios") },
+
+    // Tributos
+    { name: "IM Saneamiento",   categoryId: byName("Tributos") },
+    { name: "IM Domiciliario",  categoryId: byName("Tributos") },
+    { name: "Impuesto Primaria",categoryId: byName("Tributos") },
+
+    // Tarjetas
+    { name: "Visa Santander", categoryId: byName("Tarjetas") },
+    { name: "Visa Itau",      categoryId: byName("Tarjetas") },
+    { name: "Master BROU",    categoryId: byName("Tarjetas") },
+
+    // Otros
+    { name: "Ferreteria", categoryId: byName("Otros") },
+    { name: "Ropa",       categoryId: byName("Otros") },
+    { name: "Regalos",    categoryId: byName("Otros") },
+
+    // Ocio
+    { name: "Restaurantes", categoryId: byName("Ocio") },
+    { name: "Cine",         categoryId: byName("Ocio") },
+    { name: "Helados",      categoryId: byName("Ocio") },
+    { name: "Pasear",       categoryId: byName("Ocio") },
+    { name: "Poker",        categoryId: byName("Ocio") },
+    { name: "Salidas",      categoryId: byName("Ocio") },
+
+    // Ahorro
+    { name: "Dolares", categoryId: byName("Ahorro") },
+  ]
+    .filter((s): s is { name: string; categoryId: number } => s.categoryId !== undefined)
+    .map((s) => ({ ...s, description: "" }))
 
   await prisma.subcategory.createMany({ data: subcategories })
 

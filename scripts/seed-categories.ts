@@ -9,11 +9,19 @@ export async function seedCategories() {
 
   await prisma.category.createMany({
     data: [
-      { name: "Alimentación", description: "Gastos relacionados con comida" },
-      { name: "Transporte", description: "Movilidad, transporte público, gasolina" },
-      { name: "Entretenimiento", description: "Ocio, salidas, streaming" },
-      { name: "Salud", description: "Consultas médicas, farmacia" },
-      { name: "Servicios", description: "Agua, luz, internet, etc." },
+      { name: "Ingresos",    description: "Entradas de dinero" },
+      { name: "Alimentos",   description: "Supermercados, almacenes y alimentos" },
+      { name: "Auto",        description: "Gastos relacionados al vehículo" },
+      { name: "Transporte",  description: "Taxi, Uber, bus y movilidad" },
+      { name: "BHU",         description: "Banco Hipotecario del Uruguay" },
+      { name: "Salud",       description: "Médicos, emergencias y mutualistas" },
+      { name: "Educacion",   description: "Escuela, materiales y uniformes" },
+      { name: "Servicios",   description: "UTE, OSE, ANTEL y otros servicios" },
+      { name: "Tributos",    description: "Impuestos municipales y nacionales" },
+      { name: "Tarjetas",    description: "Pago de resúmenes de tarjetas" },
+      { name: "Otros",       description: "Gastos varios no clasificados" },
+      { name: "Ocio",        description: "Entretenimiento, salidas y recreación" },
+      { name: "Ahorro",      description: "Reservas y ahorro" },
     ],
   })
 

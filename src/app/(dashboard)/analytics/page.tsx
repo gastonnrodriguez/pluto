@@ -1,168 +1,188 @@
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { BarChart3, PieChart, TrendingDown, TrendingUp, Download, Calendar } from "lucide-react"
+"use client"
 
-// Datos de ejemplo
-const monthlyData = [
-  { month: "Enero", income: 3500, expenses: 2800, savings: 700 },
-  { month: "Febrero", income: 3500, expenses: 3200, savings: 300 },
-  { month: "Marzo", income: 3500, expenses: 2600, savings: 900 },
-  { month: "Abril", income: 3500, expenses: 3100, savings: 400 },
-  { month: "Mayo", income: 3500, expenses: 2900, savings: 600 },
-  { month: "Junio", income: 3500, expenses: 3300, savings: 200 },
-]
+import { useEffect, useState } from "react"
+import { format, startOfMonth, endOfMonth, subMonths, isWithinInterval } from "date-fns"
+import { es } from "date-fns/locale"
+import { TrendingDown, TrendingUp } from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton"
+import { cn } from "@/lib/utils"
 
-const categoryExpenses = [
-  { category: "Alimentación", amount: 1200, percentage: 35, color: "bg-green-500" },
-  { category: "Transporte", amount: 800, percentage: 23, color: "bg-blue-500" },
-  { category: "Entretenimiento", amount: 400, percentage: 12, color: "bg-purple-500" },
-  { category: "Servicios", amount: 600, percentage: 18, color: "bg-orange-500" },
-  { category: "Salud", amount: 300, percentage: 9, color: "bg-red-500" },
-  { category: "Otros", amount: 100, percentage: 3, color: "bg-gray-500" },
+type Transaction = {
+  id: number; type: string; amount: number
+  currencyCode: string; createdAt: string
+  category: { id: number; name: string }
+}
+
+const COLORS = [
+  "bg-blue-600", "bg-indigo-500", "bg-sky-500",
+  "bg-blue-800", "bg-indigo-700", "bg-blue-400",
+  "bg-sky-700",  "bg-indigo-400",
 ]
+function catColor(id: number) { return COLORS[id % COLORS.length] }
+
+function fmt(amount: number, currency: string) {
+  return new Intl.NumberFormat("es-UY", {
+    style: "currency", currency,
+    minimumFractionDigits: 0, maximumFractionDigits: 0,
+  }).format(amount)
+}
 
 export default function AnalyticsPage() {
-  const currentMonth = monthlyData[monthlyData.length - 1]
-  const previousMonth = monthlyData[monthlyData.length - 2]
-  const expenseChange = ((currentMonth.expenses - previousMonth.expenses) / previousMonth.expenses) * 100
+  const [transactions, setTransactions] = useState<Transaction[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch("/api/expenses?limit=500")
+      .then(r => r.json())
+      .then(d => setTransactions(d.transactions ?? []))
+      .finally(() => setLoading(false))
+  }, [])
+
+  const now      = new Date()
+  const currency = transactions[0]?.currencyCode ?? "UYU"
+
+  const months = Array.from({ length: 6 }, (_, i) => {
+    const date  = subMonths(now, 5 - i)
+    const start = startOfMonth(date)
+    const end   = endOfMonth(date)
+    const slice = transactions.filter(t =>
+      isWithinInterval(new Date(t.createdAt), { start, end })
+    )
+    const income  = slice.filter(t => t.type === "INCOME").reduce((s,t) => s + t.amount, 0)
+    const expense = slice.filter(t => t.type === "EXPENSE").reduce((s,t) => s + t.amount, 0)
+    return { label: format(date, "MMM", { locale: es }), income, expense, balance: income - expense }
+  })
+
+  const maxBar = Math.max(...months.map(m => Math.max(m.income, m.expense)), 1)
+
+  const thisMonthSlice = transactions.filter(t =>
+    isWithinInterval(new Date(t.createdAt), {
+      start: startOfMonth(now), end: endOfMonth(now),
+    })
+  )
+  const thisIncome  = thisMonthSlice.filter(t => t.type === "INCOME").reduce((s,t) => s + t.amount, 0)
+  const thisExpense = thisMonthSlice.filter(t => t.type === "EXPENSE").reduce((s,t) => s + t.amount, 0)
+
+  const catMap = new Map<number, { id: number; name: string; total: number }>()
+  thisMonthSlice.filter(t => t.type === "EXPENSE").forEach(t => {
+    const e = catMap.get(t.category.id)
+    if (e) e.total += t.amount
+    else catMap.set(t.category.id, { id: t.category.id, name: t.category.name, total: t.amount })
+  })
+  const topCats  = Array.from(catMap.values()).sort((a,b) => b.total - a.total)
+  const totalExp = topCats.reduce((s,c) => s + c.total, 0) || 1
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Reportes</h1>
-          <p className="text-muted-foreground">Analiza tus patrones de gasto y ahorro</p>
-        </div>
-        <div className="flex gap-2">
-          <Select defaultValue="6months">
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Período" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="1month">Último mes</SelectItem>
-              <SelectItem value="3months">Últimos 3 meses</SelectItem>
-              <SelectItem value="6months">Últimos 6 meses</SelectItem>
-              <SelectItem value="1year">Último año</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button variant="outline">
-            <Download className="mr-2 h-4 w-4" />
-            Exportar
-          </Button>
-        </div>
+    <div className="space-y-4">
+      <div>
+        <h1 className="text-xl font-bold">Análisis</h1>
+        <p className="text-xs text-muted-foreground capitalize">
+          {format(now, "MMMM yyyy", { locale: es })}
+        </p>
       </div>
 
-      {/* Resumen rápido */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Gastos del Mes</CardTitle>
-            <TrendingDown className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">${currentMonth.expenses.toLocaleString()}</div>
-            <div className="flex items-center text-xs text-muted-foreground">
-              {expenseChange > 0 ? (
-                <TrendingUp className="mr-1 h-3 w-3 text-red-500" />
-              ) : (
-                <TrendingDown className="mr-1 h-3 w-3 text-green-500" />
-              )}
-              {Math.abs(expenseChange).toFixed(1)}% vs mes anterior
+      {loading ? (
+        <div className="grid grid-cols-2 gap-3">
+          <Skeleton className="h-20 rounded-xl" />
+          <Skeleton className="h-20 rounded-xl" />
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-3">
+          <div className="rounded-xl border bg-card p-4">
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-2">
+              <TrendingUp className="h-3.5 w-3.5 text-emerald-500" />Ingresos
             </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Ahorros del Mes</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">${currentMonth.savings.toLocaleString()}</div>
-            <div className="text-xs text-muted-foreground">
-              {((currentMonth.savings / currentMonth.income) * 100).toFixed(1)}% de tus ingresos
+            <p className="text-lg font-bold text-emerald-500">{fmt(thisIncome, currency)}</p>
+          </div>
+          <div className="rounded-xl border bg-card p-4">
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-2">
+              <TrendingDown className="h-3.5 w-3.5 text-red-500" />Egresos
             </div>
-          </CardContent>
-        </Card>
+            <p className="text-lg font-bold text-red-500">{fmt(thisExpense, currency)}</p>
+          </div>
+        </div>
+      )}
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Promedio Diario</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">${(currentMonth.expenses / 30).toFixed(0)}</div>
-            <div className="text-xs text-muted-foreground">Gasto promedio por día</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Categoría Principal</CardTitle>
-            <PieChart className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{categoryExpenses[0].category}</div>
-            <div className="text-xs text-muted-foreground">
-              ${categoryExpenses[0].amount} ({categoryExpenses[0].percentage}%)
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Gráficos */}
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* Gastos por categoría */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <PieChart className="h-5 w-5" />
-              Gastos por Categoría
-            </CardTitle>
-            <CardDescription>Distribución de gastos del mes actual</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {categoryExpenses.map((item) => (
-              <div key={item.category} className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className={`w-3 h-3 rounded-full ${item.color}`} />
-                  <span className="text-sm font-medium">{item.category}</span>
+      <div className="rounded-xl border bg-card p-4">
+        <h2 className="text-sm font-semibold mb-4">Últimos 6 meses</h2>
+        {loading ? (
+          <div className="space-y-2">
+            {[1,2,3,4,5,6].map(i => <Skeleton key={i} className="h-4 w-full rounded-full" />)}
+          </div>
+        ) : (
+          <div className="space-y-1">
+            {months.map(m => (
+              <div key={m.label} className="flex items-center gap-3">
+                <span className="w-8 text-xs text-muted-foreground capitalize shrink-0">{m.label}</span>
+                <div className="flex-1 flex gap-1">
+                  <div className="flex-1 h-4 rounded-full bg-muted overflow-hidden">
+                    <div className="h-full rounded-full bg-emerald-500"
+                      style={{ width: `${(m.income / maxBar) * 100}%` }} />
+                  </div>
+                  <div className="flex-1 h-4 rounded-full bg-muted overflow-hidden">
+                    <div className="h-full rounded-full bg-red-500"
+                      style={{ width: `${(m.expense / maxBar) * 100}%` }} />
+                  </div>
                 </div>
-                <div className="text-right">
-                  <div className="text-sm font-medium">${item.amount}</div>
-                  <div className="text-xs text-muted-foreground">{item.percentage}%</div>
-                </div>
+                <span className={cn("w-20 text-xs text-right shrink-0 font-medium",
+                  m.balance >= 0 ? "text-emerald-500" : "text-red-500")}>
+                  {m.balance >= 0 ? "+" : ""}{fmt(m.balance, currency)}
+                </span>
               </div>
             ))}
-          </CardContent>
-        </Card>
-
-        {/* Tendencia mensual */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5" />
-              Tendencia Mensual
-            </CardTitle>
-            <CardDescription>Evolución de gastos y ahorros</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {monthlyData.slice(-4).map((month) => (
-              <div key={month.month} className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="font-medium">{month.month}</span>
-                  <span className="text-muted-foreground">${month.expenses}</span>
+            <div className="flex items-center gap-3 mt-2 pt-2 border-t">
+              <span className="w-8" />
+              <div className="flex-1 flex gap-1 text-xs text-muted-foreground">
+                <div className="flex-1 flex items-center gap-1">
+                  <div className="h-2 w-2 rounded-full bg-emerald-500 shrink-0" />Ingresos
                 </div>
-                <div className="w-full bg-muted rounded-full h-2">
-                  <div className="bg-primary h-2 rounded-full" style={{ width: `${(month.expenses / 3500) * 100}%` }} />
+                <div className="flex-1 flex items-center gap-1">
+                  <div className="h-2 w-2 rounded-full bg-red-500 shrink-0" />Egresos
                 </div>
               </div>
-            ))}
-          </CardContent>
-        </Card>
+              <span className="w-20" />
+            </div>
+          </div>
+        )}
       </div>
+
+      {!loading && topCats.length > 0 && (
+        <div className="rounded-xl border bg-card p-4">
+          <h2 className="text-sm font-semibold mb-3">Distribución por categoría</h2>
+          <div className="space-y-3">
+            {topCats.map(cat => {
+              const pct = Math.round((cat.total / totalExp) * 100)
+              return (
+                <div key={cat.id}>
+                  <div className="flex justify-between text-xs mb-1.5">
+                    <div className="flex items-center gap-2">
+                      <div className={cn("h-2.5 w-2.5 rounded-full", catColor(cat.id))} />
+                      <span className="font-medium">{cat.name}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <span>{pct}%</span>
+                      <span className="font-medium text-foreground">{fmt(cat.total, currency)}</span>
+                    </div>
+                  </div>
+                  <div className="h-2 rounded-full bg-muted overflow-hidden">
+                    <div className={cn("h-full rounded-full", catColor(cat.id))}
+                      style={{ width: `${pct}%` }} />
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {!loading && transactions.length === 0 && (
+        <div className="flex flex-col items-center py-16 text-center">
+          <p className="font-medium">Sin datos todavía</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            Empezá a registrar gastos para ver el análisis
+          </p>
+        </div>
+      )}
     </div>
   )
 }

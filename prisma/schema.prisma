@@ -13,6 +13,7 @@ model User {
   username   String          @unique
   password   String
   households UserHousehold[]
+  cards      Card[]          // 👈 Tarjetas del usuario
 }
 
 model Household {
@@ -20,8 +21,8 @@ model Household {
   name         String
   members      UserHousehold[]
   categories   Category[]
-  creditCards  CreditCard[]
   transactions Transaction[]
+  cards        Card[]          // 👈 Tarjetas asignadas al household
 }
 
 model UserHousehold {
@@ -54,12 +55,26 @@ model Subcategory {
   transactions Transaction[]
 }
 
-model CreditCard {
+model Card {
   id          Int       @id @default(autoincrement())
-  issuer      String
-  description String
+  name        String
+  type        String    // "crédito", "débito", "prepago"
+  bank        String
+  number      String?   // los últimos 4, por ejemplo
+  limit       Float?    // solo aplica si es crédito
+  balance     Float     @default(0)
+  isActive    Boolean   @default(true)
+
+  closeDay    Int?      // solo para crédito
+  dueDay      Int?      // solo para crédito
+
+  householdId Int       // 👈 A qué hogar pertenece
   household   Household @relation(fields: [householdId], references: [id])
-  householdId Int
+
+  userId      Int       // 👈 A qué usuario pertenece
+  user        User      @relation(fields: [userId], references: [id])
+
+  transactions Transaction[]
 }
 
 model Currency {
@@ -74,17 +89,24 @@ enum TransactionType {
 }
 
 model Transaction {
-  id            Int             @id @default(autoincrement())
-  type          TransactionType
-  amount        Float
-  description   String?
-  date          DateTime
-  household     Household       @relation(fields: [householdId], references: [id])
-  householdId   Int
-  currency      Currency        @relation(fields: [currencyCode], references: [code])
-  currencyCode  String
-  category      Category        @relation(fields: [categoryId], references: [id])
-  categoryId    Int
-  subcategory   Subcategory?    @relation(fields: [subcategoryId], references: [id])
-  subcategoryId Int?
+  id             Int       @id @default(autoincrement())
+  type           String    // ingreso | egreso
+  amount         Float
+  description    String
+  categoryId     Int
+  subcategoryId  Int?
+  currencyCode   String    // 👈 esta es la clave de la moneda
+  paymentMethod  String?   // "Efectivo", "Ticket", etc.
+  cardId         Int?      // si fue con tarjeta, ya sea crédito o débito
+
+  createdAt      DateTime  @default(now())
+
+  // Relaciones
+  category       Category  @relation(fields: [categoryId], references: [id])
+  subcategory    Subcategory? @relation(fields: [subcategoryId], references: [id])
+  currency       Currency  @relation(fields: [currencyCode], references: [code])
+  card           Card?     @relation(fields: [cardId], references: [id])
+  householdId    Int
+  household      Household @relation(fields: [householdId], references: [id])
 }
+  

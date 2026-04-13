@@ -2,6 +2,7 @@ import { seedUser } from "./seed-user"
 import { seedHousehold } from "./seed-household"
 import { seedCategories } from "./seed-categories"
 import { seedSubcategories } from "./seed-subcategories"
+import { seedCards } from "./seed-cards"
 
 async function main() {
   const user = await seedUser()
@@ -13,6 +14,7 @@ async function main() {
   await seedHousehold(user.id)
   await seedCategories()
   await seedSubcategories()
+  await seedCards()
 }
 
 main().finally(() => process.exit())

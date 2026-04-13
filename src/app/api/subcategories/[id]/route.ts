@@ -1,13 +1,14 @@
 import { prisma } from "@/lib/prisma"
 import { NextResponse } from "next/server"
 
-type Params = { params: { id: string } }
+type Context = { params: Promise<{ id: string }> }
 
-export async function PUT(req: Request, { params }: Params) {
+export async function PUT(req: Request, { params }: Context) {
+  const { id } = await params
   const data = await req.json()
 
   const updated = await prisma.subcategory.update({
-    where: { id: parseInt(params.id) },
+    where: { id: parseInt(id) },
     data,
     include: { category: true },
   })
@@ -15,7 +16,8 @@ export async function PUT(req: Request, { params }: Params) {
   return NextResponse.json(updated)
 }
 
-export async function DELETE(_: Request, { params }: Params) {
-  await prisma.subcategory.delete({ where: { id: parseInt(params.id) } })
+export async function DELETE(_: Request, { params }: Context) {
+  const { id } = await params
+  await prisma.subcategory.delete({ where: { id: parseInt(id) } })
   return NextResponse.json({ success: true })
 }
