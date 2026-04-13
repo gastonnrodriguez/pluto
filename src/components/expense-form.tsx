@@ -34,7 +34,6 @@ const CURRENCIES = [
 ]
 
 type AiResult = {
-  tipo: "INCOME" | "EXPENSE"
   categoria: string
   subcategoria: string | null
   importe: number | null
@@ -107,8 +106,7 @@ export function ExpenseForm() {
   }
 
   const applyAiResult = (ai: AiResult) => {
-    // Tipo inferido por la IA (default EXPENSE)
-    setSelectedType(ai.tipo ?? "EXPENSE")
+    setSelectedType("EXPENSE")
 
     // Match category by name (case-insensitive)
     const matchedCat = categories.find(
@@ -453,7 +451,7 @@ export function ExpenseForm() {
 
         {aiPreview && (
           <div className="space-y-1 py-1">
-            <Row label="Tipo"         value={aiPreview.tipo === "INCOME" ? "Ingreso" : "Gasto"} tipo={aiPreview.tipo} />
+            <Row label="Tipo"         value="Gasto" tipo="EXPENSE" />
             <Row label="Importe"      value={aiPreview.importe !== null && aiPreview.importe !== undefined ? String(aiPreview.importe) : "—"} highlight />
             <Row label="Descripción"  value={aiPreview.descripcion ?? "—"} />
             <Row label="Categoría"    value={aiPreview.categoria ?? "—"} />
