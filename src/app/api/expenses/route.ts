@@ -23,30 +23,41 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const data = await req.json()
+  try {
+    const data = await req.json()
+    console.log("[POST /api/expenses] payload:", JSON.stringify(data))
 
-  // Garantizar que la moneda existe (Currency es FK requerida)
-  await prisma.currency.upsert({
-    where:  { code: data.currencyCode },
-    create: { code: data.currencyCode, description: data.currencyCode },
-    update: {},
-  })
+    if (!data.type)       return NextResponse.json({ error: "type es requerido" }, { status: 400 })
+    if (!data.categoryId) return NextResponse.json({ error: "categoryId es requerido" }, { status: 400 })
+    if (!data.amount)     return NextResponse.json({ error: "amount es requerido" }, { status: 400 })
 
-  const transaction = await prisma.transaction.create({
-    data: {
-      type: data.type,
-      amount: data.amount,
-      description: data.description ?? "",
-      categoryId: data.categoryId,
-      subcategoryId: data.subcategoryId ?? null,
-      currencyCode: data.currencyCode,
-      paymentMethod: data.paymentMethod ?? null,
-      cardId: data.cardId ?? null,
-      householdId: HOUSEHOLD_ID,
-      createdAt: data.date ? new Date(data.date) : undefined,
-    },
-    include: { category: true, subcategory: true },
-  })
+    // Garantizar que la moneda existe (Currency es FK requerida)
+    await prisma.currency.upsert({
+      where:  { code: data.currencyCode },
+      create: { code: data.currencyCode, description: data.currencyCode },
+      update: {},
+    })
 
-  return NextResponse.json(transaction, { status: 201 })
+    const transaction = await prisma.transaction.create({
+      data: {
+        type: data.type,
+        amount: data.amount,
+        description: data.description ?? "",
+        categoryId: data.categoryId,
+        subcategoryId: data.subcategoryId ?? null,
+        currencyCode: data.currencyCode,
+        paymentMethod: data.paymentMethod ?? null,
+        cardId: data.cardId ?? null,
+        householdId: HOUSEHOLD_ID,
+        createdAt: data.date ? new Date(data.date) : undefined,
+      },
+      include: { category: true, subcategory: true },
+    })
+
+    return NextResponse.json(transaction, { status: 201 })
+  } catch (err) {
+    console.error("[POST /api/expenses] error:", err)
+    const message = err instanceof Error ? err.message : "Error interno"
+    return NextResponse.json({ error: message }, { status: 500 })
+  }
 }
