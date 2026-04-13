@@ -2,13 +2,14 @@
 
 import type React from "react"
 import { useRef, useState } from "react"
+import { useRouter } from "next/navigation"
 import { CalendarIcon, Camera, DollarSign, Loader2 } from "lucide-react"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -40,6 +41,7 @@ type AiResult = {
 }
 
 export function ExpenseForm() {
+  const router = useRouter()
   const [selectedType, setSelectedType]               = useState("")
   const [selectedCurrency, setSelectedCurrency]       = useState("UYU")
   const [selectedCategory, setSelectedCategory]       = useState("")
@@ -169,10 +171,12 @@ export function ExpenseForm() {
         }),
       })
 
-      if (!res.ok) throw new Error("Error al guardar el gasto")
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        throw new Error(body?.error ?? `Error al guardar el gasto (${res.status})`)
+      }
 
-      setSubmitOk(true)
-      resetForm()
+      router.push("/expenses")
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : "Error desconocido")
     } finally {
@@ -432,6 +436,9 @@ export function ExpenseForm() {
             <Camera className="h-4 w-4 text-primary" />
             Resultado del escaneo
           </DialogTitle>
+          <DialogDescription className="text-xs text-muted-foreground">
+            Revisá los datos antes de aplicarlos al formulario.
+          </DialogDescription>
         </DialogHeader>
 
         {aiPreview && (
